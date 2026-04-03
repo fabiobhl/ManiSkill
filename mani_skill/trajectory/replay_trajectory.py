@@ -519,6 +519,7 @@ def main(args: Args):
     if args.shader is not None:
         env_kwargs["shader_dir"] = args.shader  # change all shaders
     env_kwargs["reward_mode"] = args.reward_mode
+    ori_env_kwargs["reward_mode"] = args.reward_mode
     env_kwargs[
         "render_mode"
     ] = (
