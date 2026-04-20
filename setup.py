@@ -41,7 +41,6 @@ def get_dependencies():
         "imageio",
         "imageio[ffmpeg]",
         "mplib==0.1.1;platform_system=='Linux'",
-        "fast_kinematics==0.2.2;platform_system=='Linux'",
         "IPython",
         "pytorch_kinematics==0.7.6",
         "nvidia-ml-py",  # gpu monitoring
