@@ -10,11 +10,17 @@ from mani_skill.utils.geometry.trimesh_utils import get_component_mesh
 
 
 def get_actor_obb(actor: Actor, to_world_frame=True, vis=False):
+    # Get mesh in local frame; on GPU backend, component.pose (CPU-side) is
+    # stale and would place the OBB at the spawn pose instead of the true
+    # GPU pose. We apply actor.pose (GPU-synced via the ManiSkill wrapper).
     mesh = get_component_mesh(
         actor._objs[0].find_component_by_type(physx.PhysxRigidDynamicComponent),
-        to_world_frame=to_world_frame,
+        to_world_frame=False,
     )
     assert mesh is not None, "can not get actor mesh for {}".format(actor)
+
+    if to_world_frame:
+        mesh.apply_transform(actor.pose.sp.to_transformation_matrix())
 
     obb: trimesh.primitives.Box = mesh.bounding_box_oriented
 

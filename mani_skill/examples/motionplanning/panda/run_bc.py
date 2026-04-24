@@ -85,6 +85,9 @@ def parse_args(args=None):
                         help="DART action noise std as fraction of per-step action delta. 0 disables.")
     parser.add_argument("--max-joint-noise", type=float, default=0.05)
     parser.add_argument("--noise-seed", type=int, default=None)
+    parser.add_argument("--robot-uids", type=str, default=None,
+                        help="Override env default robot (e.g. 'panda' vs 'panda_wristcam'). "
+                             "Both share the panda_hand_tcp ee link.")
     return parser.parse_args()
 
 
@@ -95,8 +98,7 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
             f"No MP solution for {env_id}. Available: {list(MP_SOLUTIONS.keys())}"
         )
 
-    env = gym.make(
-        env_id,
+    env_kwargs = dict(
         obs_mode=args.obs_mode,
         control_mode="pd_joint_pos",
         render_mode=args.render_mode,
@@ -105,6 +107,9 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
         viewer_camera_configs=dict(shader_pack=args.shader),
         sim_backend=args.sim_backend,
     )
+    if args.robot_uids is not None:
+        env_kwargs["robot_uids"] = args.robot_uids
+    env = gym.make(env_id, **env_kwargs)
 
     if not args.traj_name:
         new_traj_name = time.strftime("%Y%m%d_%H%M%S")
@@ -115,7 +120,7 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
 
     env = RecordEpisode(
         env,
-        output_dir=osp.join(args.record_dir, env_id, "motionplanning_bc"),
+        output_dir=osp.join(args.record_dir, env_id, "motionplanning"),
         trajectory_name=new_traj_name,
         save_video=args.save_video,
         source_type="motionplanning",
