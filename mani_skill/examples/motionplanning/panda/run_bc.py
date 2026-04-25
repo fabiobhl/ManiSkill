@@ -71,6 +71,12 @@ def parse_args(args=None):
     parser.add_argument("-n", "--num-traj", type=int, default=10)
     parser.add_argument("--only-count-success", action="store_true")
     parser.add_argument("--reward-mode", type=str)
+    parser.add_argument(
+        "--max-episode-steps",
+        type=int,
+        default=None,
+        help="Override the environment episode horizon passed to gym.make().",
+    )
     parser.add_argument("-b", "--sim-backend", type=str, default="auto",
                         help="'auto', 'physx_cpu', or 'physx_cuda'. GPU supported.")
     parser.add_argument("--render-mode", type=str, default="rgb_array")
@@ -106,6 +112,7 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
         human_render_camera_configs=dict(shader_pack=args.shader),
         viewer_camera_configs=dict(shader_pack=args.shader),
         sim_backend=args.sim_backend,
+        max_episode_steps=args.max_episode_steps,
     )
     if args.robot_uids is not None:
         env_kwargs["robot_uids"] = args.robot_uids

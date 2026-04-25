@@ -140,7 +140,7 @@ class PandaDeltaPoseDartNoise(DartNoise):
         seed: int | None = None,
     ) -> None:
         super().__init__(scale, max_noise, gripper_dims, seed)
-        self._articulation = None
+        self._env = None
         self._pin_model = None
         self._ee_link_idx: int | None = None
         self._fk_planner = None
@@ -150,8 +150,8 @@ class PandaDeltaPoseDartNoise(DartNoise):
     def bind(self, env) -> None:
         import mplib
 
+        self._env = env
         art = env.unwrapped.agent.robot
-        self._articulation = art
         urdf_path = env.unwrapped.agent.urdf_path
         link_names = [lk.get_name() for lk in art.get_links()]
         joint_names = [j.get_name() for j in art.get_active_joints()]
@@ -164,6 +164,12 @@ class PandaDeltaPoseDartNoise(DartNoise):
         )
         self._pin_model = self._fk_planner.pinocchio_model
         self._ee_link_idx = self._fk_planner.link_name_2_idx[self.EE_LINK_NAME]
+
+    @property
+    def _articulation(self):
+        # Resolve lazily: env.reset() rebuilds the scene and replaces the robot
+        # articulation, so we must not cache the reference from bind().
+        return self._env.unwrapped.agent.robot
 
     def reset(self) -> None:
         super().reset()
@@ -193,7 +199,7 @@ class PandaDeltaPoseDartNoise(DartNoise):
         return np.concatenate([scaled_p, scaled_r]).astype(np.float32)
 
     def __call__(self, action) -> np.ndarray:
-        assert self._articulation is not None, "call bind(env) before stepping"
+        assert self._env is not None, "call bind(env) before stepping"
         action = np.asarray(action, dtype=np.float32)
         clean_full = action.copy()
         self.clean_log.append(clean_full.copy())
